@@ -202,7 +202,7 @@ jobs:
           find . -name "*.pyo" -delete
           zip -r ../backend.zip . && cd ..
           zip -g backend.zip handler.py run_web_service.py
-          zip -rg backend.zip abstractions/ controllers/ managers/ services/ database/ config/ utils/
+          zip -rg backend.zip abstractions/ controllers/ managers/ services/ database/ config/ utils/ models/ report_etls/ utility/
           echo "Backend package size: $(du -sh backend.zip | cut -f1)"
 
       - name: Upload to S3 and deploy to Lambda
