@@ -1,0 +1,45 @@
+# Web Framework
+Flask==3.0.0
+flask-cors==4.0.0
+
+# Authentication (Cognito JWT validation)
+PyJWT==2.8.0
+cryptography==41.0.7
+python-dotenv==1.0.0
+
+# File Parsing (CSV/XLSX)
+pandas>=2.1.0
+openpyxl==3.1.2
+
+# File uploads
+python-multipart==0.0.6
+
+# Utilities
+requests==2.31.0
+pydantic>=2.5.3
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# AWS Lambda WSGI Adapter (Flask is WSGI, not ASGI)
+apig-wsgi==2.20.0
+
+# Stripe billing
+stripe>=7.0.0
+
+# AI (Anthropic Claude + OpenAI)
+anthropic>=0.40.0
+openai>=1.0.0
+
+# PDF report generation
+reportlab>=4.0.0
+
+# Google OAuth
+google-auth>=2.0.0
+google-auth-oauthlib>=1.0.0
+
+# PostgreSQL (optional - for DB_TYPE=postgres)
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Note: boto3/botocore are provided by Lambda runtime - do NOT install for deployment
+# For local dev, install separately: pip install boto3

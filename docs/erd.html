@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zerve My Time - Database ERD</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f23;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a3e, #2d1b69);
+      padding: 24px 40px;
+      border-bottom: 2px solid #7b6df6;
+    }
+    header h1 { font-size: 28px; color: #fff; }
+    header p { color: #a0a0c0; margin-top: 4px; font-size: 14px; }
+    .legend {
+      display: flex; gap: 24px; padding: 16px 40px; background: #161630;
+      border-bottom: 1px solid #2a2a50; flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .legend-dot {
+      width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+    }
+    .container { padding: 32px 40px; }
+
+    /* Table groups */
+    .group { margin-bottom: 40px; }
+    .group-title {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 8px; border-bottom: 1px solid #2a2a50;
+    }
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* Table card */
+    .table-card {
+      background: #1a1a36;
+      border: 1px solid #2a2a50;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .table-card:hover { border-color: #7b6df6; }
+    .table-header {
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      background: rgba(255,255,255,0.08);
+      color: #a0a0c0;
+    }
+    .table-body { padding: 0; }
+    .col-row {
+      display: grid;
+      grid-template-columns: 24px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      font-size: 13px;
+      border-top: 1px solid #1f1f40;
+    }
+    .col-row:hover { background: rgba(123, 109, 246, 0.06); }
+    .col-icon { text-align: center; font-size: 11px; }
+    .col-name { font-family: 'SF Mono', 'Fira Code', monospace; }
+    .col-type { color: #888; font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .pk { color: #f0c040; }
+    .sk { color: #40c0f0; }
+    .fk { color: #10b981; }
+    .gsi { color: #c084fc; }
+    .ttl { color: #f87171; }
+    .tag {
+      font-size: 10px; padding: 1px 6px; border-radius: 4px;
+      font-weight: 600; letter-spacing: 0.3px;
+    }
+    .tag-pk { background: rgba(240,192,64,0.15); color: #f0c040; }
+    .tag-sk { background: rgba(64,192,240,0.15); color: #40c0f0; }
+    .tag-fk { background: rgba(16,185,129,0.15); color: #10b981; }
+    .tag-gsi { background: rgba(192,132,252,0.15); color: #c084fc; }
+    .tag-ttl { background: rgba(248,113,113,0.15); color: #f87171; }
+    .gsi-list {
+      padding: 8px 16px 12px;
+      border-top: 1px solid #1f1f40;
+    }
+    .gsi-list-title { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .gsi-chip {
+      display: inline-block; font-size: 11px; padding: 2px 8px; margin: 2px 4px 2px 0;
+      border-radius: 4px; background: rgba(192,132,252,0.1); color: #c084fc;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* Color coding by group */
+    .group-core .table-header { background: linear-gradient(90deg, rgba(123,109,246,0.15), transparent); border-left: 3px solid #7b6df6; }
+    .group-org .table-header { background: linear-gradient(90deg, rgba(16,185,129,0.15), transparent); border-left: 3px solid #10b981; }
+    .group-biz .table-header { background: linear-gradient(90deg, rgba(59,130,246,0.15), transparent); border-left: 3px solid #3b82f6; }
+    .group-workflow .table-header { background: linear-gradient(90deg, rgba(245,158,11,0.15), transparent); border-left: 3px solid #f59e0b; }
+    .group-ai .table-header { background: linear-gradient(90deg, rgba(236,72,153,0.15), transparent); border-left: 3px solid #ec4899; }
+    .group-billing .table-header { background: linear-gradient(90deg, rgba(139,92,246,0.15), transparent); border-left: 3px solid #8b5cf6; }
+
+    /* Relationships section */
+    .relationships {
+      margin-top: 40px;
+      background: #1a1a36;
+      border: 1px solid #2a2a50;
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .relationships h2 { font-size: 18px; margin-bottom: 16px; }
+    .rel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 12px;
+    }
+    .rel-item {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #12122a;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    .rel-table {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-weight: 600;
+      color: #c084fc;
+    }
+    .rel-arrow { color: #555; font-size: 16px; }
+    .rel-label { color: #888; font-size: 12px; font-style: italic; }
+    .rel-card { color: #f0c040; font-size: 11px; font-weight: 600; }
+
+    /* Visual diagram */
+    .diagram-section {
+      margin-top: 40px;
+      background: #1a1a36;
+      border: 1px solid #2a2a50;
+      border-radius: 10px;
+      padding: 24px;
+      overflow-x: auto;
+    }
+    .diagram-section h2 { font-size: 18px; margin-bottom: 16px; }
+    .visual-erd {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 900px;
+    }
+    .erd-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+    }
+    .erd-node {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      text-align: center;
+      min-width: 140px;
+      position: relative;
+    }
+    .erd-node.core { background: rgba(123,109,246,0.2); border: 1px solid #7b6df6; color: #c4bbff; }
+    .erd-node.org { background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #6ee7b7; }
+    .erd-node.biz { background: rgba(59,130,246,0.2); border: 1px solid #3b82f6; color: #93c5fd; }
+    .erd-node.workflow { background: rgba(245,158,11,0.2); border: 1px solid #f59e0b; color: #fcd34d; }
+    .erd-node.ai { background: rgba(236,72,153,0.2); border: 1px solid #ec4899; color: #f9a8d4; }
+    .erd-node.billing { background: rgba(139,92,246,0.2); border: 1px solid #8b5cf6; color: #c4b5fd; }
+    .erd-connector { color: #444; font-size: 20px; }
+    .erd-label { font-size: 11px; color: #666; }
+    .erd-sep { border-top: 1px dashed #2a2a50; margin: 12px 0; }
+
+    /* Summary stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: #1a1a36;
+      border: 1px solid #2a2a50;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-num { font-size: 28px; font-weight: 700; color: #7b6df6; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Zerve My Time &mdash; Database ERD</h1>
+    <p>16 DynamoDB tables &bull; PAY_PER_REQUEST billing &bull; Multi-tenant via org_id</p>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#f0c040"></span> PK &ndash; Partition Key</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#40c0f0"></span> SK &ndash; Sort Key</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#10b981"></span> FK &ndash; Foreign Key reference</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#c084fc"></span> GSI &ndash; Global Secondary Index</div>
+    <div class="legend-item"><span class="legend-dot" style="background:#f87171"></span> TTL &ndash; Time-To-Live expiry</div>
+  </div>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num">16</div><div class="stat-label">Tables</div></div>
+      <div class="stat-card"><div class="stat-num">28</div><div class="stat-label">GSIs</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">TTL-Enabled</div></div>
+      <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Groups</div></div>
+    </div>
+
+    <!-- Visual Relationship Diagram -->
+    <div class="diagram-section">
+      <h2>Relationship Overview</h2>
+      <div class="visual-erd">
+        <!-- Tier 1: Organization at center -->
+        <div class="erd-row">
+          <div class="erd-node billing">subscription_plans</div>
+          <div class="erd-connector">&larr; subscribes &rarr;</div>
+          <div class="erd-node org" style="min-width:180px; font-size:15px;">organizations</div>
+          <div class="erd-connector">&larr; belongs to &rarr;</div>
+          <div class="erd-node core" style="min-width:160px; font-size:15px;">users</div>
+        </div>
+        <div class="erd-sep"></div>
+
+        <!-- Tier 2: Org sends invitations, manages clients/projects -->
+        <div class="erd-row">
+          <div class="erd-node org">org_invitations</div>
+          <div class="erd-connector">&larr;</div>
+          <div class="erd-node biz">clients</div>
+          <div class="erd-connector">&rarr;</div>
+          <div class="erd-node biz">projects</div>
+          <div class="erd-connector">&rarr;</div>
+          <div class="erd-node biz">tasks</div>
+        </div>
+        <div class="erd-label" style="text-align:center; padding:4px 0;">
+          organizations 1--&gt;* org_invitations &nbsp;&bull;&nbsp;
+          organizations 1--&gt;* clients &nbsp;&bull;&nbsp;
+          clients 1--&gt;* projects &nbsp;&bull;&nbsp;
+          projects 1--&gt;* tasks
+        </div>
+        <div class="erd-sep"></div>
+
+        <!-- Tier 3: Time tracking + workflow -->
+        <div class="erd-row">
+          <div class="erd-node biz" style="min-width:160px;">time_entries</div>
+          <div class="erd-connector">&rarr;</div>
+          <div class="erd-node workflow">timesheets</div>
+          <div class="erd-connector">&nbsp;</div>
+          <div class="erd-node workflow">preset_narratives</div>
+          <div class="erd-connector">&nbsp;</div>
+          <div class="erd-node workflow">notifications</div>
+        </div>
+        <div class="erd-label" style="text-align:center; padding:4px 0;">
+          users 1--&gt;* time_entries &nbsp;&bull;&nbsp;
+          users 1--&gt;* timesheets &nbsp;&bull;&nbsp;
+          time_entries reference projects &amp; tasks &nbsp;&bull;&nbsp;
+          users 1--&gt;* notifications
+        </div>
+        <div class="erd-sep"></div>
+
+        <!-- Tier 4: AI + system -->
+        <div class="erd-row">
+          <div class="erd-node ai">ai_chat_sessions</div>
+          <div class="erd-connector">&rarr;</div>
+          <div class="erd-node ai">ai_chat_messages</div>
+          <div class="erd-connector">&nbsp;</div>
+          <div class="erd-node billing">integrations</div>
+          <div class="erd-connector">&nbsp;</div>
+          <div class="erd-node core">config</div>
+          <div class="erd-connector">&nbsp;</div>
+          <div class="erd-node core">audit_log</div>
+        </div>
+        <div class="erd-label" style="text-align:center; padding:4px 0;">
+          users 1--&gt;* ai_chat_sessions 1--&gt;* ai_chat_messages &nbsp;&bull;&nbsp;
+          users 1--&gt;* audit_log
+        </div>
+      </div>
+    </div>
+
+    <!-- CORE TABLES -->
+    <div class="group group-core">
+      <h2 class="group-title" style="color:#7b6df6;">Core Tables (3)</h2>
+      <div class="tables-grid">
+        <!-- users -->
+        <div class="table-card">
+          <div class="table-header">users <span class="badge">Cognito sub as PK</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">id</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">email</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">first_name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">last_name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">org_role</div><div class="col-type">owner|admin|manager|member</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_super_admin</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">status</div><div class="col-type">invited|active|deactivated</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">timezone</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">weekly_capacity</div><div class="col-type">Number (hours)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">default_hourly_rate</div><div class="col-type">String (decimal)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">avatar_url</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">oauth_providers</div><div class="col-type">JSON</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">must_reset_password</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">created_at</div><div class="col-type">ISO timestamp</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">EmailIndex (email)</span>
+            <span class="gsi-chip">StatusIndex (status + created_at)</span>
+            <span class="gsi-chip">OrgIdIndex (org_id + created_at)</span>
+          </div>
+        </div>
+
+        <!-- config -->
+        <div class="table-card">
+          <div class="table-header">config <span class="badge">Key-value store</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">pk</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">sk</div><div class="col-type">String</div></div>
+          </div>
+        </div>
+
+        <!-- audit_log -->
+        <div class="table-card">
+          <div class="table-header">audit_log <span class="badge">TTL enabled</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">timestamp</div><div class="col-type">ISO timestamp</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">action</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">resource</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">resource_id</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">details</div><div class="col-type">JSON</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">ip_address</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon ttl">TTL</div><div class="col-name">expiresAt</div><div class="col-type">Unix timestamp</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">UserIdIndex (userId + timestamp)</span>
+            <span class="gsi-chip">OrgIdIndex (org_id + timestamp)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORGANIZATION TABLES -->
+    <div class="group group-org">
+      <h2 class="group-title" style="color:#10b981;">Organization Tables (2)</h2>
+      <div class="tables-grid">
+        <!-- organizations -->
+        <div class="table-card">
+          <div class="table-header">organizations <span class="badge">Multi-tenant root</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">slug</div><div class="col-type">String (URL-safe)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">owner_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">plan_tier</div><div class="col-type">free|starter|professional|enterprise</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">stripe_customer_id</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">stripe_subscription_id</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">settings</div><div class="col-type">JSON (timezone, weekStart, rounding)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">member_count</div><div class="col-type">Number</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">created_at</div><div class="col-type">ISO timestamp</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">SlugIndex (slug)</span>
+            <span class="gsi-chip">OwnerIdIndex (owner_id)</span>
+            <span class="gsi-chip">StripeCustomerIndex (stripe_customer_id)</span>
+          </div>
+        </div>
+
+        <!-- org_invitations -->
+        <div class="table-card">
+          <div class="table-header">org_invitations <span class="badge">TTL enabled</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">email</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">token</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">role</div><div class="col-type">owner|admin|manager|member</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">status</div><div class="col-type">pending|accepted|expired|revoked</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">invited_by</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">expires_at</div><div class="col-type">ISO timestamp</div></div>
+            <div class="col-row"><div class="col-icon ttl">TTL</div><div class="col-name">expires_at_ttl</div><div class="col-type">Unix timestamp</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">accepted_at</div><div class="col-type">ISO timestamp</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">created_at</div><div class="col-type">ISO timestamp</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">OrgIdIndex (org_id + created_at)</span>
+            <span class="gsi-chip">EmailIndex (email)</span>
+            <span class="gsi-chip">TokenIndex (token)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUSINESS TABLES -->
+    <div class="group group-biz">
+      <h2 class="group-title" style="color:#3b82f6;">Business Tables (4)</h2>
+      <div class="tables-grid">
+        <!-- clients -->
+        <div class="table-card">
+          <div class="table-header">clients <span class="badge">PK: org_id</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">contact_name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">contact_email</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">contact_phone</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">address</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">notes</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">NameIndex (org_id + name)</span>
+          </div>
+        </div>
+
+        <!-- projects -->
+        <div class="table-card">
+          <div class="table-header">projects <span class="badge">Sub-project support</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">code</div><div class="col-type">String (project code)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">client_id</div><div class="col-type">String &rarr; clients.id</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">parent_id</div><div class="col-type">String &rarr; projects.id (self-ref)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">description</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">color</div><div class="col-type">String (hex)</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">status</div><div class="col-type">active|archived|completed</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_billable</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">hourly_rate</div><div class="col-type">String (decimal)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">budget_hours</div><div class="col-type">String (decimal)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">budget_amount</div><div class="col-type">String (decimal)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">assigned_user_ids</div><div class="col-type">JSON array</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">tags</div><div class="col-type">JSON array</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">CodeIndex (org_id + code)</span>
+            <span class="gsi-chip">ClientIdIndex (client_id)</span>
+            <span class="gsi-chip">StatusIndex (org_id + status)</span>
+            <span class="gsi-chip">ParentIndex (parent_id)</span>
+          </div>
+        </div>
+
+        <!-- tasks -->
+        <div class="table-card">
+          <div class="table-header">tasks <span class="badge">Project sub-items</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">project_id</div><div class="col-type">String &rarr; projects.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">description</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_billable</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">sort_order</div><div class="col-type">Number</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">ProjectIdIndex (project_id + sort_order)</span>
+          </div>
+        </div>
+
+        <!-- time_entries -->
+        <div class="table-card">
+          <div class="table-header">time_entries <span class="badge">5 GSIs</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">project_id</div><div class="col-type">String &rarr; projects.id</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">task_id</div><div class="col-type">String &rarr; tasks.id</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">client_id</div><div class="col-type">String &rarr; clients.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">date</div><div class="col-type">YYYY-MM-DD</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">description</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">duration_minutes</div><div class="col-type">Number</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">start_time</div><div class="col-type">HH:MM</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">end_time</div><div class="col-type">HH:MM</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_billable</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">is_running</div><div class="col-type">"true"|"false" (string for GSI)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">timer_started_at</div><div class="col-type">ISO timestamp</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">source</div><div class="col-type">manual|timer|import|ai_suggest</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">approval_status</div><div class="col-type">unsubmitted|pending|approved|rejected</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">tags</div><div class="col-type">JSON array</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">UserDateIndex (user_id + date)</span>
+            <span class="gsi-chip">ProjectDateIndex (project_id + date)</span>
+            <span class="gsi-chip">ClientDateIndex (client_id + date)</span>
+            <span class="gsi-chip">ApprovalIndex (org_id + approval_status)</span>
+            <span class="gsi-chip">RunningTimerIndex (user_id + is_running)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKFLOW TABLES -->
+    <div class="group group-workflow">
+      <h2 class="group-title" style="color:#f59e0b;">Workflow Tables (3)</h2>
+      <div class="tables-grid">
+        <!-- preset_narratives -->
+        <div class="table-card">
+          <div class="table-header">preset_narratives <span class="badge">Reusable descriptions</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id (null = org-wide)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">project_id</div><div class="col-type">String &rarr; projects.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">title</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">text</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">UserIdIndex (user_id)</span>
+            <span class="gsi-chip">ProjectIdIndex (project_id)</span>
+          </div>
+        </div>
+
+        <!-- timesheets -->
+        <div class="table-card">
+          <div class="table-header">timesheets <span class="badge">Weekly approval workflow</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">user_week</div><div class="col-type">{userId}#{weekStart}</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">week_start</div><div class="col-type">YYYY-MM-DD (Monday)</div></div>
+            <div class="col-row"><div class="col-icon gsi">GSI</div><div class="col-name">status</div><div class="col-type">draft|submitted|approved|rejected</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">total_hours</div><div class="col-type">Number (float)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">billable_hours</div><div class="col-type">Number (float)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">submitted_at</div><div class="col-type">ISO timestamp</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">approved_by</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">rejection_reason</div><div class="col-type">String</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">UserIdIndex (user_id)</span>
+            <span class="gsi-chip">StatusIndex (org_id + status)</span>
+          </div>
+        </div>
+
+        <!-- notifications -->
+        <div class="table-card">
+          <div class="table-header">notifications <span class="badge">TTL enabled</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">timestamp_id</div><div class="col-type">{ISO}#{UUID}</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">notification_type</div><div class="col-type">timesheet_reminder|submitted|approved|...</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">title</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">message</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_read</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">action_url</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon ttl">TTL</div><div class="col-name">expires_at_ttl</div><div class="col-type">Unix timestamp (90 days)</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">OrgIdIndex (org_id)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI TABLES -->
+    <div class="group group-ai">
+      <h2 class="group-title" style="color:#ec4899;">AI Tables (2)</h2>
+      <div class="tables-grid">
+        <!-- ai_chat_sessions -->
+        <div class="table-card">
+          <div class="table-header">ai_chat_sessions</div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">user_id</div><div class="col-type">String &rarr; users.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon fk">FK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">title</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">message_count</div><div class="col-type">Number</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">last_message_at</div><div class="col-type">ISO timestamp</div></div>
+          </div>
+          <div class="gsi-list">
+            <div class="gsi-list-title">Global Secondary Indexes</div>
+            <span class="gsi-chip">OrgIdIndex (org_id)</span>
+          </div>
+        </div>
+
+        <!-- ai_chat_messages -->
+        <div class="table-card">
+          <div class="table-header">ai_chat_messages</div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">session_id</div><div class="col-type">String &rarr; ai_chat_sessions.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">timestamp_id</div><div class="col-type">{ISO}#{UUID}</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">role</div><div class="col-type">user|assistant|system</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">content</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">tool_calls</div><div class="col-type">JSON</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">chart_config</div><div class="col-type">JSON (inline charts)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILLING & INTEGRATION TABLES -->
+    <div class="group group-billing">
+      <h2 class="group-title" style="color:#8b5cf6;">Billing & Integration Tables (2)</h2>
+      <div class="tables-grid">
+        <!-- subscription_plans -->
+        <div class="table-card">
+          <div class="table-header">subscription_plans <span class="badge">Stripe pricing</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">id</div><div class="col-type">String (UUID)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">tier</div><div class="col-type">free|starter|professional|enterprise</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">stripe_price_id</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">price_monthly</div><div class="col-type">Number (float)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">price_yearly</div><div class="col-type">Number (float)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">max_members</div><div class="col-type">Number (0 = unlimited)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">max_projects</div><div class="col-type">Number (0 = unlimited)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">features</div><div class="col-type">JSON array</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+          </div>
+        </div>
+
+        <!-- integrations -->
+        <div class="table-card">
+          <div class="table-header">integrations <span class="badge">Future: Jira, GitHub, Slack</span></div>
+          <div class="table-body">
+            <div class="col-row"><div class="col-icon pk">PK</div><div class="col-name">org_id</div><div class="col-type">String &rarr; organizations.id</div></div>
+            <div class="col-row"><div class="col-icon sk">SK</div><div class="col-name">provider_id</div><div class="col-type">{provider}#{id}</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">provider</div><div class="col-type">jira|github|slack|google_calendar</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">name</div><div class="col-type">String</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">config</div><div class="col-type">JSON (encrypted credentials)</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">is_active</div><div class="col-type">Boolean</div></div>
+            <div class="col-row"><div class="col-icon"></div><div class="col-name">last_synced_at</div><div class="col-type">ISO timestamp</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RELATIONSHIPS -->
+    <div class="relationships">
+      <h2>All Relationships</h2>
+      <div class="rel-grid">
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">users</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">org_invitations</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">clients</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">projects</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">tasks</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">time_entries</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">timesheets</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">preset_narratives</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">integrations</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">organizations</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">subscription_plans</span>
+          <span class="rel-card">N : 1</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">clients</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">projects</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">projects</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">projects</span>
+          <span class="rel-card">1 : N (parent)</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">projects</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">tasks</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">users</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">time_entries</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">users</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">timesheets</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">users</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">notifications</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">users</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">ai_chat_sessions</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">users</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">audit_log</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">ai_chat_sessions</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">ai_chat_messages</span>
+          <span class="rel-card">1 : N</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">time_entries</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">projects</span>
+          <span class="rel-card">N : 1</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">time_entries</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">tasks</span>
+          <span class="rel-card">N : 1</span>
+        </div>
+        <div class="rel-item">
+          <span class="rel-table">time_entries</span>
+          <span class="rel-arrow">&rarr;</span>
+          <span class="rel-table">clients</span>
+          <span class="rel-card">N : 1</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

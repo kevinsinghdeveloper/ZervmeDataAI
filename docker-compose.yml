@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8001:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=8000
+      - FLASK_DEBUG=true
+      - AWS_REGION_NAME=us-east-1
+      - DYNAMODB_TABLE_PREFIX=zerve-dataai-dev
+      - DYNAMODB_ENDPOINT_URL=http://dynamodb-local:8000
+      - COGNITO_USER_POOL_ID=local
+      - COGNITO_CLIENT_ID=local
+      - UPLOADS_BUCKET=
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      - DB_TYPE=dynamodb
+      - CORS_ORIGINS=http://localhost:3000
+    depends_on:
+      - dynamodb-local
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  uploads:

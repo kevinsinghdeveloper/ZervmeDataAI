@@ -1,0 +1,52 @@
+# Dependencies
+frontend/node_modules/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.venv/
+backend/bin/
+backend/lib/
+backend/lib64
+backend/include/
+backend/pyvenv.cfg
+backend/CACHEDIR.TAG
+*.pyc
+*.pyo
+
+# Build
+frontend/build/
+frontend/dist/
+*.zip
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+infrastructure/terraform/**/.terraform/
+infrastructure/terraform/**/*.tfstate
+infrastructure/terraform/**/*.tfstate.backup
+infrastructure/terraform/**/*.tfplan
+infrastructure/terraform/**/placeholder.zip
+infrastructure/terraform/**/*.tfvars
+
+# Uploads
+backend/uploads/
+
+# Test
+coverage/
+htmlcov/
+.pytest_cache/
+
+# Logs
+*.log
